@@ -46,7 +46,7 @@ jobs:
         docker push public.ecr.aws/m7w0r2s7/my-public:1.0
     - name: deploy to eks
       run: |
-        kubectl apply -f deploy.yaml
-        kubectl apply -f svc.yaml
+        sudo kubectl apply -f deploy.yaml
+        sudo kubectl apply -f svc.yaml
         
       
