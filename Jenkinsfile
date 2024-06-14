@@ -23,9 +23,11 @@ pipeline{
        }
          stage('deploy'){
          steps{
+            script {
    withDockerRegistry(credentialsId: 'dockerhub') {
     sh 'docker push bharath0812/java:7.0'
 }
+            }
          }
        }
         stage('deploy-k8s'){
