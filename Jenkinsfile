@@ -5,11 +5,6 @@ pipeline{
      }
      
     stages{
-     stage('checkout')   {
-         steps{
-             git branch: 'dev', url: 'https://github.com/bharah08/Healthcare.git'
-         }
-     }
        stage('unit-testing'){
            steps{
                sh 'mvn test'
@@ -23,16 +18,24 @@ pipeline{
        } 
        stage('docker-mage build'){
          steps{
-           sh 'docker build -t bharath0812/healthcare:1.0 .'
+           sh 'docker build -t bharath0812/java:7.0 .'
          }
        }
          stage('deploy'){
          steps{
-           sshagent(['docker-test-server']) {
-    sh 'ssh -o StrictHostKeyChecking=no ubuntu@3.7.253.199 sudo docker run -d --name test1 -p 8082:8082  bharath0812/healthcare'
+   withDockerRegistry(credentialsId: 'dockerhub') {
+    sh 'docker push bharath0812/java:7.0'
 }
          }
        }
-        
+        stage('deploy-k8s'){
+            steps{
+                withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'my-eks', contextName: '', credentialsId: 'eks-jenkins', namespace: '', serverUrl: 'https://72315A3A81F6E4C9C2B5AE2E6499E99D.gr7.ap-south-1.eks.amazonaws.com']]) {
+    sh 'kubectl apply -f de.yml'
+}
+            }
+        }
+
+
     }
 }
