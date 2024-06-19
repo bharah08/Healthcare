@@ -1,0 +1,34 @@
+version: 0.2
+
+env:
+  variables:
+    IMAGE_REPO_NAME: "health"    # Replace with your ECR repository name
+    IMAGE_TAG: "1.0"
+  phases:
+    install:
+      runtime-versions:
+        java: corretto11
+        docker: 19
+      commands:
+        - echo Logging in to Amazon ECR...
+        - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 211125513262.dkr.ecr.ap-south-1.amazonaws.com
+    pre_build:
+      commands:
+        - echo Running Maven build...
+        - mvn clean install
+        - echo Build completed on `date`
+        - echo Build a Docker image
+        - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+    build:
+      commands:
+        - echo Tagging Docker image...
+        - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG 211125513262.dkr.ecr.ap-south-1.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+    post_build:
+      commands:
+        - echo Pushing Docker image to ECR...
+        - docker push 211125513262.dkr.ecr.ap-south-1.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+        - echo Docker image pushed to ECR successfully.
+  artifacts:
+    files:
+      - target/*.jar
+    discard-paths: yes
