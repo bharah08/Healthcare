@@ -17,36 +17,22 @@ jobs:
 
     - name: Build with Maven
       run: |
-        PATH="/opt/apache-maven-3.6.3/bin:$PATH"
+        PATH="/opt/apache-maven-3.8.7/bin:$PATH"
         mvn clean install
-
-    - name: SonarQube Scan
-      uses: sonarsource/sonarqube-scan-action@master
-      with:
-        projectBaseDir: .
-        args: >
-          -Dsonar.verbose=true
-          -Dsonar.projectKey=devops-test1234_woapp
-          -Dsonar.organization=devops-test1234
-          -Dsonar.projectName=health-care
-          -Dsonar.language=java
-          -Dsonar.sourceEncoding=UTF-8
-          -Dsonar.sources=.
-          -Dsonar.java.binaries=target/classes
-          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        
     - name: login to ecr
       run: |
         aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/m7w0r2s7
     - name: build docker image
       run: |
-        docker build -t public.ecr.aws/m7w0r2s7/my-public:1.0 .
-        docker push public.ecr.aws/m7w0r2s7/my-public:1.0
-    - name: deploy to eks
-      run: |
-        sudo kubectl apply -f deploy.yaml
-        sudo kubectl apply -f svc.yaml
+        docker build -t public.ecr.aws/m7w0r2s7/health:latest .
+        docker push public.ecr.aws/m7w0r2s7/health:latest
+    - name: Kubectl Action
+      uses: tale/kubectl-action@v1
+      with:
+        base64-kube-config: ${{ secrets.KUBE_CONFIG_PROD }}
+    - run: |
+        kubectl apply -d deploy.yaml
+        kubectl apply -d svc.yaml
         
       
